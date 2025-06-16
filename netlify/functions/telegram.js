@@ -1,13 +1,13 @@
-// File: netlify/functions/telegram.js - FINAL CORRECTED VERSION
+// File: api/telegram.js - FINAL CORRECTED VERSION
 
 // We need to import the library first, before we use it.
 const nodeFetch = require('node-fetch');
 
 const GAME_SHORT_NAME = 'Haroldsescapebysexyboredom';
 
-// The main function that Netlify will run
+// The main function that Vercel will run
 exports.handler = async (event) => {
-    // This is where we get the secret token from Netlify's settings
+    // This is where we get the secret token from Vercel's settings
     const botToken = process.env.Telegramapi;
     const TELEGRAM_API_URL = `https://api.telegram.org/bot${botToken}`;
     
@@ -50,9 +50,9 @@ exports.handler = async (event) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         callback_query_id: body.callback_query.id,
-                        url: `https://hailvirgo123.itch.io/harold
+                        url: `https://hailvirgo123.itch.io/harold`
                     })
-                });
+                }); // <-- THE MISSING BRACKETS HAVE BEEN ADDED HERE
             }
         }
 
@@ -61,6 +61,6 @@ exports.handler = async (event) => {
 
     } catch (e) {
         console.error("Error processing Telegram update:", e);
-        return { statusCode: 200, body: 'OK' };
+        return { statusCode: 200, body: 'OK' }; // Always return 200 to prevent Telegram from resending
     }
 };
