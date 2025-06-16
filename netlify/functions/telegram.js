@@ -1,7 +1,7 @@
 // File: netlify/functions/telegram.js - FINAL, DYNAMIC VERSION
 
 // Use a more reliable way to make requests from a server environment
-const fetch = require('node-fetch');
+const fetch = (...args) => import('node-fetch').then(({default: fetch}) => fetch(...args));
 
 const GAME_SHORT_NAME = 'Haroldsescapebysexyboredom';
 const TELEGRAM_API_URL = `https://api.telegram.org/bot${process.env.Telegramapi}`; // Uses your custom key
