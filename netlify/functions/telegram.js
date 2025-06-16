@@ -50,7 +50,7 @@ exports.handler = async (event) => {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         callback_query_id: body.callback_query.id,
-                        url: `https://voluble-lebkuchen-83281b.netlify.app/`
+                        url: `https://hailvirgo123.itch.io/harold
                     })
                 });
             }
