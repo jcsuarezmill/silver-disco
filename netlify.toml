@@ -1,0 +1,14 @@
+# File: netlify.toml - FINAL, ROBUST VERSION
+
+[build]
+  # This command forces Netlify to run its build process,
+  # which will discover and deploy your functions.
+  command = "echo 'Build command triggered'"
+  
+  # This tells Netlify where your functions are located.
+  functions = "netlify/functions"
+
+# This provides specific configuration for your functions.
+[functions]
+  # This ensures all functions in the directory are included.
+  included_files = ["netlify/functions/**"]

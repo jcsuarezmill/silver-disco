@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Harold's Great Escape</title>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Press Start 2P', cursive;
+      background-color: #1a1a2d;
+      color: #f0f0f0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+      overflow: hidden;
+      user-select: none;
+    }
+    h1 { font-size: 1.5rem; margin-bottom: 12px; color: #ffcc00; text-align: center; }
+    #game-container {
+      position: relative;
+      width: 100%;
+      max-width: 800px;
+      aspect-ratio: 16 / 9;
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+    }
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+      image-rendering: -moz-crisp-edges;
+      image-rendering: crisp-edges;
+      background-color: #70c5ce;
+    }
+    .game-ui {
+      position: absolute; top: 10px; color: #ffcc00; font-size: 12px;
+      background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px;
+      user-select: none; z-index: 10; font-weight: 700; display: flex; align-items: center;
+    }
+    #coin-counter { left: 10px; }
+    #kill-counter { right: 10px; }
+    #timer-container { left: 50%; transform: translateX(-50%); font-size: 1.2rem; color: #ff4444; }
+    #status-right { top: auto; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 4px; gap: 4px; flex-direction: column; align-items: flex-end; }
+    #harold-icon { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ffcc00; }
+    .life-ammo-container { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+    #lifebar { width: 120px; height: 12px; background-color: #333; border-radius: 2px; }
+    #lifebar-inner { background: #ff4d4d; height: 100%; border-radius: 2px; transition: width 0.2s ease; }
+    .ammo-counter { font-size: 10px; display: none; padding-top: 2px;}
+    #shotgun-ammo-counter { color: #ff9d00; }
+    #laser-ammo-counter { color: #00ffff; }
+    #grenade-ammo-counter { color: #55ff55; }
+    #chaingun-ammo-counter { color: #cccccc; }
+    #railgun-ammo-counter { color: #f055ff; }
+    .game-overlay {
+      position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(26, 26, 45, 0.95); display: none;
+      flex-direction: column;
+      align-items: center; justify-content: center; text-align: center;
+      z-index: 999; user-select: none; padding: 20px;
+      border-radius: 8px; line-height: 1.5; font-weight: 900;
+      gap: 20px;
+    }
+    #start-screen-overlay { display: flex; }
+    #game-over-overlay { color: #ff4444; font-size: 24px; }
+    #game-over-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
+    #game-win-overlay { color: #4dff4d; font-size: 24px; }
+    #game-win-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
+    .controls {
+      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+      width: calc(100% - 40px); max-width: 400px; display: none;
+      justify-content: space-between; align-items: center; padding: 10px;
+      background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; z-index: 100; gap: 10px;
+    }
+    .controls.active { display: flex; }
+    .control-button {
+      font-family: 'Press Start 2P', cursive; background-color: #ffcc00; color: #1a1a2d;
+      border: 2px solid #1a1a2d; padding: 15px; font-size: 1rem; border-radius: 8px;
+      cursor: pointer; text-align: center; flex-grow: 1;
+      box-shadow: 0 4px 0px #cca300; transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .control-button:active { transform: translateY(2px); box-shadow: 0 2px 0px #cca300; }
+    .d-pad { display: flex; gap: 10px; }
+    @media (max-width: 768px) { h1 { font-size: 1.2rem; } }
+  </style>
+</head>
+<body>
+  <h1>Harold's Great Escape</h1>
+  <div id="game-container" role="main" aria-label="Harold's Great Escape game">
+    <canvas id="gameCanvas"></canvas>
+
+    <div id="start-screen-overlay" class="game-overlay">
+      <h2 style="font-size: 1.8rem; color: #ffcc00;">Harold's Great Escape</h2>
+      <p style="font-size: 0.8rem; max-width: 500px; font-weight: 100; line-height: 1.8;">
+        In a city infested with monsters, help Harold reach the rocket in 2 minutes to escape to the moon!
+      </p>
+      <button id="play-button" class="control-button" style="padding: 20px; font-size: 1.2rem;">PLAY</button>
+      <button id="sound-toggle-button" class="control-button" style="padding: 10px; font-size: 0.8rem; max-width: 200px;">Sound: ON</button>
+    </div>
+
+    <div id="coin-counter" class="game-ui">H-Coins: 0</div>
+    <div id="timer-container" class="game-ui">2:00</div>
+    <div id="kill-counter" class="game-ui">Kills: 0</div>
+    
+    <div id="status-right" class="game-ui">
+        <div class="life-ammo-container">
+            <img id="harold-icon" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAEAAAABACAYAAACqaXHeAAAAAXNSR0IArs4c6QAAAARnQU1BAACxjwv8YQUAAAAJcEhZcwAADsMAAA7DAcdvqGQAAARRSURBVHhe7ZxLyBxFFMd/q6g5JSi4iCg4iH+iiwfxoKj4EUHwoPgQXEDxJ+JBRPAgoqAEXXRxEHcRdFHwYFFEcaM4iIsLpQbyh0QyLdO76p7pnu6Z2b7yQcnA93R1db+qX1VPvaqAcYxjfKkCshA0hA2hQ9gQMoQNYUPYEDYEDWFD2BAyhA1hQ9gQMoQNYUPYEDYEDWFD2BAyhA1hQ/jfGUBmZoY8PDzI/f196ezslIeHh1SAwsJCGR4eppaWVqmqquq0Dqurq5O6ujp5enqSJ0+eZIDy8nIZHh6WwcFBqaqqSmEZAQEBuXqD/Pz8yNnZWRkaGpKdnZ0ykJWVlTJ0d3cn3d3dyfPnzxkAOzs7ZXh4WJqbm1NtbW0Kyw4ODmRyckqmpqZkYmJCRkdHZfT4+PjQ+vo6aWpqklevXjmAoqIi2d/fl/T09FBVVRWFZWhoSMbGxqSnp0c2Nzakr69vBqh8fHzI4uIiOTo6stkXFRWVEgCysrKkvr4+A2RkZEiWlpYMgLKyMmlpacoAqampZXjY2dnJyclJqaioSG3yCAsLy9Wfl5eXy4Dk5OQyAAsLC1lZWZHLly8zANTV1SUAKiurpLGxkYKCgtTan5ubG5qbm2VgZWVl8vLyIq2trbIMcM5w8LBsbm6WqV+7ukG6u7tlYAGgvr5e8vPzZWB7e3syPz8vA/D+/XsOgKOjI+nt7ZXg4GBpaWmRU6dOZfS4pqZGcnNzZdDbbWBgQE6ePGkXfXx8yMnJSQD4+fmRvr4+eePGDY2Pj8vAwIAAaWlpUXD0+fNnmZ+fl9nZWRkaGpKtra0yMDAwMLgBysvLZXt7W/Lz8+XqN9ra2mRwcJAMDAxIQUGBDA4O+i4DkJaWJgDk5eWVCQBpaWkyAPLy8gSAGAwGSG9vr7S3t2cg+v3+3g3y9fUlKysr5d69ewwAz8/P5f7+PgfAT09PMjQ0JDExMQCAgoIC2djYkK6uLgBgYmJCioqKMgAePnxY+j0AcnJyZGFhQfLy8mTdunUMgIaGBtnY2JDs7GzJyckhIyMDmpubZWBeXl7e/c2fP1/S1tZmHjU3NycjIyPKw4cPGSCXl5cyPz8vZWVkd2+Qnp4e2dnZkYmJCZmfny/Dw8MyyCstLZWTk5Py/fffKxg9Ly8v3e+ZmZkyODgofX192QAvPz/LwB/Q19cn3d3d+t7p6WnZuXPnmq/x8fEyPz8vo0eA8/Pz5eXLl6mxsVGhoaEyPT0ttbW1CcdbW1vTz/Vz586VPu8+qW+eT/iUAf0+m+p/t27d0tLS0pQh/M0M6H8yQNkQMoQNYUPYEDYEDWFD2BAyhA1hQ9gQMoQNYUPYEDYEDWFD2BAyhA1hQ9gQMoQNYUPYEDYEDWFD2BAyhA1hQ9gQMoQNYUPYEDYEDWFD2BAyhA1hQ9gQMoQNYcM4xvG/GP8ARl4Xy4F/8l0AAAAASUVORK5CYII=" alt="Harold Icon">
+            <div id="lifebar" role="progressbar" aria-valuemin="0" aria-valuemax="10" aria-valuenow="10" aria-label="Player life">
+                <div id="lifebar-inner" style="width: 100%;"></div>
+            </div>
+        </div>
+        <div id="railgun-ammo-counter" class="ammo-counter" aria-live="polite">SLUGS: 0</div>
+        <div id="grenade-ammo-counter" class="ammo-counter" aria-live="polite">NADES: 0</div>
+        <div id="laser-ammo-counter" class="ammo-counter" aria-live="polite">CELLS: 0</div>
+        <div id="shotgun-ammo-counter" class="ammo-counter" aria-live="polite">SHELLS: 0</div>
+        <div id="chaingun-ammo-counter" class="ammo-counter" aria-live="polite">ROUNDS: 0</div>
+    </div>
+    
+    <div id="game-over-overlay" class="game-overlay" role="alert" aria-live="assertive" tabindex="0">
+      <span id="game-over-title">Game Over!</span>
+      <span id="game-over-message">Harold was eaten by the zombies.</span>
+      <button id="restartButtonGameOver" class="control-button">Restart</button>
+    </div>
+    <div id="game-win-overlay" class="game-overlay" role="alert" aria-live="assertive" tabindex="0">
+      <span id="game-win-title">You Win!</span>
+      <span id="game-win-message">Harold escaped the city!</span>
+      <button id="restartButtonWin" class="control-button">Restart</button>
+    </div>
+  </div>
+
+  <div id="touch-controls" class="controls" aria-label="Touch controls for game">
+    <div class="d-pad">
+      <button id="leftButton" class="control-button" aria-label="Move left">LEFT</button>
+      <button id="rightButton" class="control-button" aria-label="Move right">RIGHT</button>
+    </div>
+    <button id="jumpButton" class="control-button" aria-label="Jump">JUMP</button>
+    <button id="shootButton" class="control-button" aria-label="Shoot / Interact">SHOOT</button>
+  </div>
+
+<script src="game.js" defer></script>
+</body>
+</html>
