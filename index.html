@@ -24,13 +24,6 @@
       overflow: hidden;
       user-select: none;
     }
-    h1 { 
-      /* This title is only shown if the game fails to load or on desktop */
-      font-size: 1.5rem; 
-      margin-bottom: 12px; 
-      color: #ffcc00; 
-      text-align: center; 
-    }
     #game-container {
       position: relative;
       width: 100%;
@@ -88,15 +81,20 @@
       z-index: 999; user-select: none; padding: 20px;
       border-radius: 8px; line-height: 1.5; font-weight: 900;
       gap: 20px;
-      overflow-y: auto; /* *** THIS IS THE FIX FOR THE BUTTON *** */
+      overflow-y: auto;
     }
     #start-screen-overlay { display: flex; }
+    #start-screen-image {
+        max-width: 90%;
+        height: auto;
+        border-radius: 8px;
+        margin-bottom: 10px;
+    }
     #game-over-overlay { color: #ff4444; font-size: 24px; }
     #game-over-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
     #game-win-overlay { color: #4dff4d; font-size: 24px; }
     #game-win-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
     
-    /* Buttons on the overlay screens */
     .overlay-button {
       font-family: 'Press Start 2P', cursive; background-color: #ffcc00; color: #1a1a2d;
       border: 2px solid #1a1a2d; padding: 15px; font-size: 1rem; border-radius: 8px;
@@ -106,7 +104,6 @@
     .overlay-button:active { transform: translateY(2px); box-shadow: 0 2px 0px #cca300; }
 
     @media (max-width: 768px) { 
-        h1 { display: none; }
         #game-container { border-radius: 0; border: none; }
         .game-ui { font-size: 10px; }
         #timer-container { font-size: 1rem; }
@@ -114,12 +111,13 @@
   </style>
 </head>
 <body>
-  <h1>Harold's Great Escape</h1>
+  <!-- The h1 title that was here has been removed -->
   <div id="game-container" role="main" aria-label="Harold's Great Escape game">
     <canvas id="gameCanvas"></canvas>
 
     <div id="start-screen-overlay" class="game-overlay">
-      <h2 style="font-size: 1.8rem; color: #ffcc00;">Harold's Great Escape</h2>
+      <img id="start-screen-image" src="assets/harold-poster.png" alt="Harold's Escape Poster">
+
       <p style="font-size: 0.8rem; max-width: 500px; font-weight: 100; line-height: 1.8;">
         In a city infested with monsters, help Harold reach the rocket in 2 minutes to escape to the moon!
       </p>
