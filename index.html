@@ -28,7 +28,8 @@
       font-size: 1.5rem; 
       margin-bottom: 12px; 
       color: #ffcc00; 
-      text-align: center; 
+      text-align: center;
+      opacity: 0; /* Make the title invisible but keep it in the layout */
     }
     #game-container {
       position: relative;
@@ -106,7 +107,9 @@
     /* CSS for the new poster image */
     #start-screen-image {
         max-width: 90%;
+        max-height: 40vh; /* Constrain height to be responsive on mobile */
         height: auto;
+        object-fit: contain; /* Ensure image scales correctly */
         border-radius: 8px;
         margin-bottom: 10px;
     }
