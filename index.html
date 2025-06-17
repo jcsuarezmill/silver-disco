@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Harold's Great Escape</title>
   <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet" />
+  
+  <!-- Telegram Web App Script for better integration -->
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -16,11 +20,17 @@
       align-items: center;
       justify-content: center;
       min-height: 100vh;
-      padding: 16px;
+      padding: 0; /* No padding for full-screen experience */
       overflow: hidden;
       user-select: none;
     }
-    h1 { font-size: 1.5rem; margin-bottom: 12px; color: #ffcc00; text-align: center; }
+    h1 { 
+      /* This title is only shown if the game fails to load or on desktop */
+      font-size: 1.5rem; 
+      margin-bottom: 12px; 
+      color: #ffcc00; 
+      text-align: center; 
+    }
     #game-container {
       position: relative;
       width: 100%;
@@ -48,7 +58,17 @@
     #coin-counter { left: 10px; }
     #kill-counter { right: 10px; }
     #timer-container { left: 50%; transform: translateX(-50%); font-size: 1.2rem; color: #ff4444; }
-    #status-right { top: auto; bottom: 10px; right: 10px; background: rgba(0,0,0,0.6); padding: 4px; gap: 4px; flex-direction: column; align-items: flex-end; }
+    #status-right { 
+        top: 40px; 
+        left: 10px; 
+        right: auto; 
+        bottom: auto;
+        background: rgba(0,0,0,0.6); 
+        padding: 4px; 
+        gap: 4px; 
+        flex-direction: column; 
+        align-items: flex-start;
+    }
     #harold-icon { width: 24px; height: 24px; border-radius: 50%; border: 2px solid #ffcc00; }
     .life-ammo-container { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
     #lifebar { width: 120px; height: 12px; background-color: #333; border-radius: 2px; }
@@ -59,6 +79,7 @@
     #grenade-ammo-counter { color: #55ff55; }
     #chaingun-ammo-counter { color: #cccccc; }
     #railgun-ammo-counter { color: #f055ff; }
+
     .game-overlay {
       position: absolute; top: 0; left: 0; width: 100%; height: 100%;
       background: rgba(26, 26, 45, 0.95); display: none;
@@ -67,28 +88,29 @@
       z-index: 999; user-select: none; padding: 20px;
       border-radius: 8px; line-height: 1.5; font-weight: 900;
       gap: 20px;
+      overflow-y: auto; /* *** THIS IS THE FIX FOR THE BUTTON *** */
     }
     #start-screen-overlay { display: flex; }
     #game-over-overlay { color: #ff4444; font-size: 24px; }
     #game-over-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
     #game-win-overlay { color: #4dff4d; font-size: 24px; }
     #game-win-message { font-size: 1rem; color: #f0f0f0; line-height: 1.6; font-weight: 100;}
-    .controls {
-      position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
-      width: calc(100% - 40px); max-width: 400px; display: none;
-      justify-content: space-between; align-items: center; padding: 10px;
-      background-color: rgba(0, 0, 0, 0.5); border-radius: 10px; z-index: 100; gap: 10px;
-    }
-    .controls.active { display: flex; }
-    .control-button {
+    
+    /* Buttons on the overlay screens */
+    .overlay-button {
       font-family: 'Press Start 2P', cursive; background-color: #ffcc00; color: #1a1a2d;
       border: 2px solid #1a1a2d; padding: 15px; font-size: 1rem; border-radius: 8px;
-      cursor: pointer; text-align: center; flex-grow: 1;
+      cursor: pointer; text-align: center;
       box-shadow: 0 4px 0px #cca300; transition: transform 0.1s, box-shadow 0.1s;
     }
-    .control-button:active { transform: translateY(2px); box-shadow: 0 2px 0px #cca300; }
-    .d-pad { display: flex; gap: 10px; }
-    @media (max-width: 768px) { h1 { font-size: 1.2rem; } }
+    .overlay-button:active { transform: translateY(2px); box-shadow: 0 2px 0px #cca300; }
+
+    @media (max-width: 768px) { 
+        h1 { display: none; }
+        #game-container { border-radius: 0; border: none; }
+        .game-ui { font-size: 10px; }
+        #timer-container { font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
@@ -101,8 +123,8 @@
       <p style="font-size: 0.8rem; max-width: 500px; font-weight: 100; line-height: 1.8;">
         In a city infested with monsters, help Harold reach the rocket in 2 minutes to escape to the moon!
       </p>
-      <button id="play-button" class="control-button" style="padding: 20px; font-size: 1.2rem;">PLAY</button>
-      <button id="sound-toggle-button" class="control-button" style="padding: 10px; font-size: 0.8rem; max-width: 200px;">Sound: ON</button>
+      <button id="play-button" class="overlay-button" style="padding: 20px; font-size: 1.2rem;">PLAY</button>
+      <button id="sound-toggle-button" class="overlay-button" style="padding: 10px; font-size: 0.8rem; max-width: 200px;">Sound: ON</button>
     </div>
 
     <div id="coin-counter" class="game-ui">H-Coins: 0</div>
@@ -126,23 +148,16 @@
     <div id="game-over-overlay" class="game-overlay" role="alert" aria-live="assertive" tabindex="0">
       <span id="game-over-title">Game Over!</span>
       <span id="game-over-message">Harold was eaten by the zombies.</span>
-      <button id="restartButtonGameOver" class="control-button">Restart</button>
+      <button id="restartButtonGameOver" class="overlay-button">Restart</button>
     </div>
     <div id="game-win-overlay" class="game-overlay" role="alert" aria-live="assertive" tabindex="0">
       <span id="game-win-title">You Win!</span>
       <span id="game-win-message">Harold escaped the city!</span>
-      <button id="restartButtonWin" class="control-button">Restart</button>
+      <button id="restartButtonWin" class="overlay-button">Restart</button>
     </div>
   </div>
 
-  <div id="touch-controls" class="controls" aria-label="Touch controls for game">
-    <div class="d-pad">
-      <button id="leftButton" class="control-button" aria-label="Move left">LEFT</button>
-      <button id="rightButton" class="control-button" aria-label="Move right">RIGHT</button>
-    </div>
-    <button id="jumpButton" class="control-button" aria-label="Jump">JUMP</button>
-    <button id="shootButton" class="control-button" aria-label="Shoot / Interact">SHOOT</button>
-  </div>
+  <!-- All HTML touch controls have been removed. They are now drawn on the canvas via game.js -->
 
 <script src="game.js" defer></script>
 </body>
